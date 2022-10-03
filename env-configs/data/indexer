@@ -1,0 +1,2 @@
+druid_service=druid/indexer
+druid_plaintextPort=8091

@@ -1,0 +1,23 @@
+
+datasources:
+  druid:
+    driver-class-name: "org.apache.calcite.avatica.remote.Driver"
+    url: "jdbc:avatica:remote:url=${datasources.druid.config.host}:${datasources.druid.config.broker}/druid/v2/sql/avatica/"
+    sqlTimeZone: UTC  # default
+    hikari:
+      poolName: druid_pool
+      maximum-pool-size: 10
+      connection-timeout: 5000
+      connection-init-sql: SELECT 1
+      validation-timeout: 2000
+      minimum-idle: 10
+      idle-timeout: 600000
+      max-lifetime: 1800000
+    config:
+      host: "http://localhost"
+      coordinator: 10053
+      broker: 10054
+      historical: 10055
+      middlemanager: 10056
+      router: 10063
+      ingestionApi: "/druid/indexer/v1/task"

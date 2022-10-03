@@ -1,0 +1,8 @@
+druid_service=druid/historical
+druid_plaintextPort=8083
+druid_host=druid-historical
+
+# Processing threads and buffers
+druid_processing_buffer_sizeBytes=500MiB
+druid_processing_numMergeBuffers=2
+druid_processing_numThreads=2

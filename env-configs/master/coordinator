@@ -1,0 +1,11 @@
+druid_service=druid/coordinator
+druid_plaintextPort=8081
+druid_host=druid-coordinator
+
+#
+# MySQL Metadata Storage
+#
+druid_metadata_storage_type=mysql
+druid_metadata_storage_connector_connectURI=jdbc:mysql://druid-metadata-storage:3306/druid
+druid_metadata_storage_connector_user=druid
+druid_metadata_storage_connector_password=1111

@@ -1,0 +1,179 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+version: "3"
+
+volumes:
+  metadata_data: {}
+  middle_var: {}
+  historical_var: {}
+  broker_var: {}
+  coordinator_var: {}
+  router_var: {}
+  druid_shared: {}
+
+services:
+  minio-server:
+    image: minio/minio
+    container_name: minio-server
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio_admin
+    command: server /data --console-address ":9001"
+    volumes:
+      - "${MINIO_PATH}/data:/data"
+
+  minio-client:
+    image: minio/mc
+    container_name: minio-client
+    depends_on:
+      - minio-server
+    volumes:
+      - "${MINIO_PATH}/test_data:/data"
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add minio http://minio-server:9000 minio minio_admin;
+      /usr/bin/mc mb minio/dataset;
+      /usr/bin/mc mb minio/metricset;
+      /usr/bin/mc cp /data/house_prise.csv minio/dataset/test_data/house_prise.csv;
+      exit 0;
+      "
+
+  druid-metadata-storage:
+    image: mysql:8.0.28
+    container_name: druid-metadata-storage
+    ports:
+      - "10035:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "1234"
+      MYSQL_USER: "druid"
+      MYSQL_PASSWORD: "1111"
+      MYSQL_DATABASES: "druid"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - "${MYSQL_PATH}/initdb/init.sql:/docker-entrypoint-initdb.d/1.sql"
+      - "${MYSQL_PATH}/data:/var/lib/mysql"
+
+  # Need 3.5 or later for container nodes
+  druid-zookeeper:
+    container_name: druid-zookeeper
+    image: zookeeper:3.5
+    ports:
+      - "10036:2181"
+    environment:
+      - ZOO_MY_ID=1
+
+  druid-coordinator:
+    image: digitalist/druid-mysql:0.22.1-mysql
+    container_name: druid-coordinator
+    volumes:
+      - druid_shared:/opt/shared
+      - coordinator_var:/opt/druid/var
+    depends_on:
+      - druid-zookeeper
+      - druid-metadata-storage
+      - minio-server
+    ports:
+      - "10037:8081"
+    command:
+      - coordinator
+    env_file:
+      - ./env-configs/common
+      - ./env-configs/master/coordinator
+      - ./env-configs/master/overlord
+
+  druid-broker:
+    image: digitalist/druid-mysql:0.22.1-mysql
+    container_name: druid-broker
+    volumes:
+      - broker_var:/opt/druid/var
+    depends_on:
+      - druid-zookeeper
+      - druid-metadata-storage
+      - druid-coordinator
+      - minio-server
+    ports:
+      - "10038:8082"
+    command:
+      - broker
+    env_file:
+      - ./env-configs/common
+      - ./env-configs/query/broker
+
+  druid-historical:
+    image: digitalist/druid-mysql:0.22.1-mysql
+    container_name: druid-historical
+    volumes:
+      - druid_shared:/opt/shared
+      - historical_var:/opt/druid/var
+    depends_on:
+      - druid-zookeeper
+      - druid-metadata-storage
+      - druid-coordinator
+      - minio-server
+    ports:
+      - "10039:8083"
+    command:
+      - historical
+    env_file:
+      - ./env-configs/common
+      - ./env-configs/data/historical
+
+  druid-middlemanager:
+    image: digitalist/druid-mysql:0.22.1-mysql
+    container_name: druid-middlemanager
+    volumes:
+      - druid_shared:/opt/shared
+      - middle_var:/opt/druid/var
+    depends_on:
+      - druid-zookeeper
+      - druid-metadata-storage
+      - druid-coordinator
+      - minio-server
+    ports:
+      - "10040:8091"
+      - "10041-10046:8100-8105"
+    command:
+      - middleManager
+    env_file:
+      - ./env-configs/common
+      - ./env-configs/data/middlemanager
+      - ./env-configs/data/indexer
+
+  druid-router:
+    image: digitalist/druid-mysql:0.22.1-mysql
+    container_name: druid-router
+    volumes:
+      - router_var:/opt/druid/var
+    depends_on:
+      - druid-zookeeper
+      - druid-metadata-storage
+      - druid-coordinator
+      - minio-server
+    ports:
+      - "10050:8888"
+    command:
+      - router
+    env_file:
+      - ./env-configs/common
+      - ./env-configs/query/router

@@ -1,0 +1,3 @@
+druid_service=druid/router
+druid_plaintextPort=8888
+druid_host=druid-router

@@ -1,0 +1,3 @@
+druid_service=druid/broker
+druid_plaintextPort=8082
+druid_host=druid-broker

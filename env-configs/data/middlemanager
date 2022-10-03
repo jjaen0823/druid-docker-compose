@@ -1,0 +1,3 @@
+druid_service=druid/middleManager
+druid_plaintextPort=8091
+druid_host=druid-middlemanager

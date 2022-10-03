@@ -1,0 +1,9 @@
+druid_service=druid/overlord
+
+#
+# MySQL Metadata Storage
+#
+druid_metadata_storage_type=mysql
+druid_metadata_storage_connector_connectURI=jdbc:mysql://druid-metadata-storage/druid?useSSL=false&allowPublicKeyRetrieval=true&serverTimeZone=UTC
+druid_metadata_storage_connector_user=druid
+druid_metadata_storage_connector_password=1111
