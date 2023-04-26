@@ -74,6 +74,6 @@ docker build -t apache/druid:0.22.1-mysql --build-arg DRUID_RELEASE=apache/druid
 ## [ load data from s3 ]
 <img width="600" alt="image" src="https://user-images.githubusercontent.com/75469281/234470078-25b22ad8-9a09-4de4-8dca-b5e34229d1c8.png">
 
-<img width="600" alt="image" src="https://user-images.githubusercontent.com/75469281/177033856-24e6f0ff-b738-4be2-b53e-5415dfa541bc.png">
+<img width="600" alt="image" src="https://user-images.githubusercontent.com/75469281/234470145-e3e3f752-7571-4efc-8520-ec63ea50092d.png">
 
 
